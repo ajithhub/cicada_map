@@ -1,0 +1,16 @@
+application: ajithscratch
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /test
+  script: main.py
+- url: / 
+  script: main.py
+- url: /prefs
+  script: prefs.py
+  login: required
+- url: /record_sighting
+  script: record_sighting.py
+  login: required
