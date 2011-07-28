@@ -6,10 +6,19 @@ from google.appengine.api import memcache
 
 class Sighting(db.Model):
     coords  = db.GeoPtProperty()
+    geohash = db.StringProperty()
+    species = db.StringProperty()
     address = db.PostalAddressProperty()
     email   = db.EmailProperty()
-    comment = str
-    
+    comment = db.StringProperty()
+    create_date = db.DateTimeProperty(auto_now_add=True)
+ 
+class Image(db.Model):
+    caption = str
+    image = db.BlobProperty()
+    create_date = db.DateTimeProperty(auto_now_add=True)
+    sighting = db.ReferenceProperty(Sighting)
+       
 
 class UserPrefs(db.Model):
     tz_offset = db.IntegerProperty(default=0)

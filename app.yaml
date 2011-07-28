@@ -13,4 +13,5 @@ handlers:
   login: required
 - url: /record_sighting
   script: record_sighting.py
-  login: required
+- url: /show_image
+  script: record_sighting.py

@@ -4,13 +4,31 @@ from google. appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.db import GeoPt
 from google.appengine.ext import db
 from models import Sighting
+from models import Image
 
 from geopy import geocoders
+
+from geohash import Geohash
 
 from django.utils import simplejson  
 import models
 
 import logging
+
+class ShowImage(webapp.RequestHandler):
+    def get(self):
+        id= None
+        try:
+            id = int(self.request.get('id'))
+            logging.info("Got id %s", id);
+        except ValueError:
+            pass
+
+        if id:
+            image = Image.get_by_id(id)
+            logging.info("Got image %s", id);
+            self.response.headers['Content-Type'] = "image/jpg"
+            self.response.out.write(image.image)
 
 class RecordSighting(webapp.RequestHandler):
     def get(self):
@@ -34,6 +52,8 @@ class RecordSighting(webapp.RequestHandler):
             address = sighting.address
             lat = sighting.coords.lat
             long = sighting.coords.lon
+            geohash = sighting.geohash
+            logging.info("Got geohash %s", geohash);
 
         self.response.out.write('''
         <html>
@@ -68,17 +88,21 @@ class RecordSighting(webapp.RequestHandler):
 </script>
             </head>
             <body onload="initialize()">
-            <form action = "record_sighting" method = "POST">
+            <form action = "record_sighting" enctype="multipart/form-data" method = "POST">
+            Species: <input name = "species" type = "text" value = "%s"/><br>
             Address: <input name = "address" type = "text" value = "%s"/><br>
+            geohash: <input disabled name = "geohash" type = "text" value = "%s"/><br>
             Lat: <input disabled name = "lat"  type = "text" value = "%s"/><br>
             long: <input disabled name = "long" type = "text" value = "%s" /><br>
+            image: <input type="file" name="img"/><br>
+            comment: <input type="textarea" name="comment"/><br>
             submit: <input name  = "save" type = "submit"/><br>
 
             </form>
           <div id="map" style="width:100%%; height:100%%"></div>
          </body>
         </html>
-        ''' % (address, lat, long))
+        ''' % (str(sighting.species), address, geohash,lat, long))
 
         self.response.out.write("<table>");
         q = Sighting.all()
@@ -104,28 +128,41 @@ class RecordSighting(webapp.RequestHandler):
     def post(self):
         userprefs = models.get_userprefs()
         sighting = models.Sighting()
+
         try:
             for param in ['address','lat','long']:
                 if self.request.get(param):
                     logging.info('Got params %s = %s', param, self.request.get(param))
                     #logging.info('Got params %s = %s' % param, self.request.get(param))
             sighting.address = self.request.get('address')
+            sighting.comment = self.request.get('comment')
+            sighting.spieces = self.request.get('species')
             g = geocoders.Google()
             place, (lat, lng) = g.geocode(sighting.address)  
             logging.info("%s: %.5f, %.5f" % (place, lat, lng)  )
             sighting.coords = GeoPt(lat, lng);
+            sighting.geohash = str(Geohash((lat, lng)));
             #sighting.coords = GeoPt(self.request.get('lat'),self.request.get('long'));
             logging.info("Sighting is %s", sighting);
             sighting.put();
+            logging.info("geohash is %s", sighting.geohash);
             logging.info("Key is %s", sighting.key().name());
             logging.info("Key is %s", sighting.key().id());
+            if self.request.get('img'):
+                image = models.Image()
+                image.sighting = sighting.key()
+                image.image = self.request.get('img')
+                image.put()
+                logging.info("image Key is %s", image.key().id());
         except ValueError:
             # User entered a value that wasn't an integer.  Ignore for now.
             self. redirect('/record_sighting?=ERROR')
 
         self. redirect('/record_sighting?id=%s' % (sighting.key().id()))
 
-application = webapp.WSGIApplication([('/record_sighting', RecordSighting)],
+application = webapp.WSGIApplication([('/record_sighting', RecordSighting),
+                                      ('/show_image', ShowImage)  
+],
                                      debug=True)
 def main():
     run_wsgi_app(application)
