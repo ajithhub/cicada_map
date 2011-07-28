@@ -7,6 +7,7 @@ from models import Sighting
 
 from geopy import geocoders
 
+from django.utils import simplejson  
 import models
 
 import logging
@@ -38,24 +39,67 @@ class RecordSighting(webapp.RequestHandler):
         <html>
             <head>
             <title>Record a new sighting...</title>
-            </head>
-         <body>
-            <form action = "record_sighting" method = "POST">
-Address: <input name = "address" type = "text" value = "%s"/><br>
-Lat: <input disabled name = "lat"  type = "text" value = "%s"/><br>
-long: <input disabled name = "long" type = "text" value = "%s" /><br>
-submit: <input name  = "save" type = "submit"/><br>
 
-</form>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false">
+</script>
+
+<script type="text/javascript">
+  function initialize() {
+    var latlng = new google.maps.LatLng(40.120, -88.256);
+    var myOptions = {
+      zoom: 12,
+      center: latlng,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    var map = new google.maps.Map(document.getElementById("map"),
+        myOptions);
+    var sightings = load_json()
+    for (var i = 0; i < sightings.length; i++) {
+        var point = new google.maps.LatLng(sightings[i].lat, sightings[i].lon);
+ var marker = new google.maps.Marker({
+      position: point, 
+      map: map, 
+      title: sightings[i].address
+  });   
+
+        
+}
+}
+</script>
+            </head>
+            <body onload="initialize()">
+            <form action = "record_sighting" method = "POST">
+            Address: <input name = "address" type = "text" value = "%s"/><br>
+            Lat: <input disabled name = "lat"  type = "text" value = "%s"/><br>
+            long: <input disabled name = "long" type = "text" value = "%s" /><br>
+            submit: <input name  = "save" type = "submit"/><br>
+
+            </form>
+          <div id="map" style="width:100%%; height:100%%"></div>
          </body>
         </html>
-        '''%( address, lat, long))
+        ''' % (address, lat, long))
 
         self.response.out.write("<table>");
         q = Sighting.all()
+        points = []
         for result in q:
+            point = {}
+            point['lat'] = result.coords.lat
+            point['lon'] = result.coords.lon
+            point['address'] = result.address
+            points.append(point)
             self.response.out.write("<tr><td>%s(%s, %s)</td></tr>" % (result.address, result.coords.lat, result.coords.lon))
         self.response.out.write("</table>");
+
+        json_script = '''
+<script type="text/javascript">
+  function load_json() {
+    return %s
+}
+</script>
+''' % (simplejson.dumps(points))
+        self.response.out.write(json_script );
 
     def post(self):
         userprefs = models.get_userprefs()
