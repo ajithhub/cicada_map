@@ -13,7 +13,7 @@ class Sighting(db.Model):
     comment = db.StringProperty()
     create_date = db.DateTimeProperty(auto_now_add=True)
  
-class Image(db.Model):
+class AttachedImage(db.Model):
     caption = str
     image = db.BlobProperty()
     create_date = db.DateTimeProperty(auto_now_add=True)
