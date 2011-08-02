@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title>Cicadas of IL</title>
+    <body >
+        <h1>{{ sighting.address }}</h1>
+
+        <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>geohash</td><td>{{sighting.geohash}}</td></tr>
+        </table>
+
+
+
+            {% for image in images %}
+            <img src = "show_image?id={{ image.key.id }}"/>
+            {% endfor %}
+
+    </body>
+</html>

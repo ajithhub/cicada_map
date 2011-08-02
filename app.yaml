@@ -4,14 +4,29 @@ runtime: python
 api_version: 1
 
 handlers:
+- url: /
+  static_files: wwwroot/index.html
+  upload: wwwroot/index.html
+
 - url: /test
-  script: main.py
-- url: / 
   script: main.py
 - url: /prefs
   script: prefs.py
   login: required
 - url: /record_sighting
   script: record_sighting.py
+
+- url: /view_sighting
+  script: record_sighting.py
+
 - url: /show_image
   script: record_sighting.py
+
+- url: /get_sightings
+  script: record_sighting.py
+
+
+- url: /js
+  static_dir: wwwroot/js
+- url: /.*
+  static_dir: wwwroot

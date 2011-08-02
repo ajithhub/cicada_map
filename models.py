@@ -3,6 +3,8 @@ from google.appengine.ext import db
 
 import logging
 from google.appengine.api import memcache
+#PIL
+from google.appengine.api import images
 
 class Sighting(db.Model):
     coords  = db.GeoPtProperty()
@@ -15,10 +17,22 @@ class Sighting(db.Model):
  
 class AttachedImage(db.Model):
     caption = str
-    image = db.BlobProperty()
+    original  = db.BlobProperty()
     create_date = db.DateTimeProperty(auto_now_add=True)
     sighting = db.ReferenceProperty(Sighting)
-       
+
+    def resize(self, w, h):
+        if not self.original:
+            return None
+        img = images.Image(self.original)
+        img.resize(width=w, height=h)
+        img.im_feeling_lucky()
+        return img.execute_transforms(output_encoding=images.JPEG)
+    def get_thumbnail(self):
+        return self.resize(80,100)
+    def get_small(self):
+        return self.resize(640,480)
+
 
 class UserPrefs(db.Model):
     tz_offset = db.IntegerProperty(default=0)

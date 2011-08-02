@@ -1,14 +1,23 @@
-from google. appengine.ext import webapp
-from google. appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+from google.appengine.dist import use_library
+use_library('django', '1.2')
+
 
 from google.appengine.ext.db import GeoPt
 from google.appengine.ext import db
+
+import os
+from google.appengine.ext.webapp import template
+
 from models import Sighting
 from models import AttachedImage
 
 from geopy import geocoders
 
 from geohash import Geohash
+
 
 from django.utils import simplejson  
 import models
@@ -19,20 +28,67 @@ import cStringIO
 
 import logging
 
+class GetSightingsAsJson(webapp.RequestHandler):
+    def get(self):
+        q = Sighting.all()
+        points = []
+        for result in q:
+            point = {}
+            if result.coords:
+                point['lat'] = result.coords.lat
+                point['lon'] = result.coords.lon
+                point['address'] = result.address
+                image = AttachedImage.gql("WHERE sighting = :1", result).get()
+                if image:
+                    point['thumbnail'] = "/show_image?id=%s&size=thumb" % image.key().id()
+                points.append(point)
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.out.write(simplejson.dumps(points) );
+
 class ShowImage(webapp.RequestHandler):
     def get(self):
-        id= None
+        id    = None
+        size  = "thumb"
+
         try:
             id = int(self.request.get('id'))
             logging.info("Got id %s", id);
         except ValueError:
             pass
 
+        size = self.request.get('size')
+
         if id:
             image = AttachedImage.get_by_id(id)
             logging.info("Got image %s", id);
             self.response.headers['Content-Type'] = "image/jpg"
-            self.response.out.write(image.image)
+            if size == "thumb":
+                self.response.out.write(image.get_thumbnail())
+            else:
+                self.response.out.write(image.get_small())
+        
+class ViewSighting(webapp.RequestHandler):
+    def get(self):
+        id = None
+        try:
+            id = int(self.request.get('id'))
+            logging.info("Got id %s", id);
+        except ValueError:
+            pass
+        if id:
+            sighting = Sighting.get_by_id(id)
+            logging.info("Got sighting %s", sighting.coords)
+            images = AttachedImage.gql("WHERE sighting = :1", sighting).fetch(10,0)
+
+            for image in images:
+                logging.info("Got image id = %s", image.key())
+
+            template_params = {
+                    'images': images,
+                    'sighting': sighting
+                    }   
+        path = os.path.join(os.path.dirname(__file__), 'templates/TestTemplat.html')
+        self.response.out.write(template.render(path, template_params))
 
 class RecordSighting(webapp.RequestHandler):
     def get(self):
@@ -68,32 +124,7 @@ class RecordSighting(webapp.RequestHandler):
             <head>
             <title>Record a new sighting...</title>
 
-<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false">
-</script>
 
-<script type="text/javascript">
-  function initialize() {
-    var latlng = new google.maps.LatLng(40.120, -88.256);
-    var myOptions = {
-      zoom: 12,
-      center: latlng,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    };
-    var map = new google.maps.Map(document.getElementById("map"),
-        myOptions);
-    var sightings = load_json()
-    for (var i = 0; i < sightings.length; i++) {
-        var point = new google.maps.LatLng(sightings[i].lat, sightings[i].lon);
- var marker = new google.maps.Marker({
-      position: point, 
-      map: map, 
-      title: sightings[i].address
-  });   
-
-        
-}
-}
-</script>
             </head>
             <body onload="initialize()">
             <form action = "record_sighting" enctype="multipart/form-data" method = "POST">
@@ -107,7 +138,6 @@ class RecordSighting(webapp.RequestHandler):
             submit: <input name  = "save" type = "submit"/><br>
 
             </form>
-          <div id="map" style="width:100%%; height:100%%"></div>
          </body>
         </html>
         ''' % (species, address, geohash,lat, long))
@@ -122,17 +152,8 @@ class RecordSighting(webapp.RequestHandler):
                 point['lon'] = result.coords.lon
                 point['address'] = result.address
                 points.append(point)
-                self.response.out.write("<tr><td>%s(%s, %s) %s</td></tr>" % (result.address, result.coords.lat, result.coords.lon, result.geohash))
+                self.response.out.write("<tr><td><a href='/view_sighting?id=%s'>%s</a>(%s, %s) %s</td></tr>" % (result.key().id(),result.address, result.coords.lat, result.coords.lon, result.geohash))
         self.response.out.write("</table>");
-
-        json_script = '''
-<script type="text/javascript">
-  function load_json() {
-    return %s
-}
-</script>
-''' % (simplejson.dumps(points))
-        self.response.out.write(json_script );
 
     def post(self):
         logging.info("Entering POST")
@@ -159,8 +180,8 @@ class RecordSighting(webapp.RequestHandler):
             lon = None
             if self.request.get('img'):
                 image = models.AttachedImage()
-                image.image = self.request.get('img')
-                imageStream = cStringIO.StringIO(image.image)
+                image.original = self.request.get('img')
+                imageStream = cStringIO.StringIO(image.original)
                 data = EXIF.process_file(imageStream, stop_tag='UNDEF', details=True, strict=False, debug=False)
                 try:
                     lat, lon = exif_helper.get_gps_coords(data)
@@ -203,7 +224,9 @@ class RecordSighting(webapp.RequestHandler):
         self. redirect('/record_sighting?id=%s' % (sighting.key().id()))
 
 application = webapp.WSGIApplication([('/record_sighting', RecordSighting),
-                                      ('/show_image', ShowImage)  
+                                      ('/show_image', ShowImage),
+                                      ('/get_sightings', GetSightingsAsJson),
+                                      ('/view_sighting',ViewSighting)  
 ],
                                      debug=True)
 def main():

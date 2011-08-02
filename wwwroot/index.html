@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>Cicadas of IL</title>
+        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false">
+        </script>
+        <script type="text/javascript" src="/js/jquery-1.6.2.js"/>
+        </script>
+
+        <script type="text/javascript">
+            function initialize() {
+                var latlng = new google.maps.LatLng(40.120, -88.256);
+                var myOptions = {
+                                zoom: 12,
+                                center: latlng,
+                                mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                var map = new google.maps.Map(document.getElementById("map"),
+                        myOptions);
+
+                $.ajax({  
+                            type: "GET",  
+                                url: "/get_sightings",  
+                                    dataType: "json",
+                                    //data: ({"address":address}),
+                                    success: function(sightings){
+                    for (var i = 0; i < sightings.length; i++) {
+                        var point = new google.maps.LatLng(sightings[i].lat, sightings[i].lon);
+                        var marker = new google.maps.Marker({
+                                     position: point, 
+                                     map: map, 
+                                     title: sightings[i].address
+                                  });   
+
+                        var contentString = 
+                                 '<img src = "' + sightings[i].thumbnail + '"/>'
+                        var infoWindow = new google.maps.InfoWindow({
+                                   content: contentString
+                             });
+                        google.maps.event.addListener(marker, 'click', function() {
+                                     infoWindow.open(map,marker);
+                              });
+
+
+                                    }
+
+                                    }
+                        });
+            }
+        </script>
+
+    </head>
+    <body onload="initialize()">
+        <h1>Test
+
+            <a href = "/record_sighting"> Record a Sighting</a>
+          <div id="map" style="width:100%; height:100%"></div>
+    </body>
+</html>
+
