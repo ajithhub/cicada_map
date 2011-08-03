@@ -1,0 +1,231 @@
+/* Lifted from http://grandprairiefriends.org/style.css*/
+
+
+/*Browser Reset*/
+
+html, body, form, fieldset {
+     font: 100%/120% Tahoma, Helvetica, sans-serif;
+     margin: 0;
+     padding: 0;
+}
+h1, h2, h3, h4, h5, h6, p, pre,
+blockquote, ul, ol, dl, address {
+     margin: 10px 0; 
+     padding: 0; 
+}
+li, dd, blockquote { 
+     margin-left: 20px; 
+}
+
+/*Main Styles*/
+
+body {
+     background: url('/images/gradient.png') repeat-x #bdbfad;
+}
+#nodisplay {
+    display: none;
+}
+#shadow {
+     background: url('/images/shadow2.png');
+     margin-left: auto;
+     margin-right: auto;
+     width: 924px;
+}
+#container {
+     background-color: #fff;
+     color: #666666;
+     font-family: Tahoma, Helvetica, sans-serif;
+     font-size: .75em;
+     line-height: 1.7em;     
+     margin-left: auto;
+     margin-right: auto;
+     min-height: 600px;
+     width: 900px;
+}
+#header {
+     height: 175px;
+     width: 900px;
+}
+#logo a {
+    background-image: url('/images/header.png');
+    display: block;
+    height: 150px;
+    width: 900px; 
+    text-indent: -999em;
+}
+#banner {
+     border-bottom: 1px solid #cccccc;
+     height: 150px;
+     margin: 25px 50px 0 50px;
+     padding-bottom: 25px;
+     width: 800px;
+}
+#main {
+     float: left;
+     margin-left: 50px;
+     width: 800px;
+     text-align: left;
+}
+#sidebar {
+     float: right;
+     font-size: .95em;
+     line-height: 1.5em;
+     margin-right: 50px;
+     text-align: left;
+     width: 250px;
+}
+#main, #sidebar {
+     padding-bottom: 25px;
+}
+#top {
+    width: 800px;
+    margin: 10px 0 10px 50px;
+    text-align: justify;
+    border-bottom: 1px solid #cccccc;
+    padding-bottom: 25px;
+}
+#top li{
+    display: inline;
+}
+#top ul{
+    text-align: center;
+}
+#footer {
+     background-color: #333333;
+     color: white;
+     font-family: Georgia;
+     font-size: .8em;
+     height: 25px;
+     letter-spacing: 2px;
+     padding-top: 4px;
+     text-align: center;
+}
+#footerwrapper {
+     border-top: 1px solid #cccccc;
+     clear: both;
+     height: 50px;
+     margin: auto;
+     width: 800px;
+}
+
+/*Navigation Menu*/
+
+#nav {
+    background:#333333;
+    font-size:10px;
+    font-family:Georgia,serif;
+    letter-spacing: 2px;
+    width:100%;
+}
+#nav, #nav ul {
+    border: none;
+    float:left;
+    list-style:none;
+    line-height:25px;
+    margin:0;
+    padding:0;
+    width:100%;
+}
+#nav a {
+    color:#fff;
+    display:block;
+    padding:0px 10px;
+    text-decoration:none;
+}
+#nav li {
+     float:left;
+     margin:0;
+     padding:0;
+     text-align: center;
+     width: 150px;
+}
+#nav ul {
+     border:0;
+     font-weight:normal;
+     height:auto;
+     left:-999em;
+     line-height:1em;
+     margin:0;
+     position:absolute;
+     width:150px;
+     }
+#nav li li {
+     font-family:georgia, serif;
+     text-align: left;
+     width:150px;
+}
+#nav li li a {
+     color:#ffffff;
+     font-size:10px;
+     padding:5px 5px 5px 10px;
+     width:125px;
+}
+#nav li ul ul {
+     margin:-21px 0 0 150px;
+}
+#nav li li:hover {
+     background:#dddddd;
+}
+#nav li ul li:hover a, #nav li ul li li:hover a, #nav li ul li li li:hover a, #nav li ul li li li:hover a {
+     color:#444444;
+}
+#nav li:hover a, #nav li.sfhover a {
+     color:#333333;
+}
+#nav li:hover li a, #nav li li:hover li a, #nav li li li:hover li a, #nav li li li li:hover li a {
+     color:#ffffff;
+}
+#nav li:hover ul ul, #nav li:hover ul ul ul, #nav li:hover ul ul ul ul, #nav li.sfhover ul ul, #nav li.sfhover ul ul ul, #nav li.sfhover ul ul ul ul {
+     left:-999em;
+}
+#nav li:hover ul, #nav li li:hover ul, #nav li li li:hover ul, #nav li li li li:hover ul, #nav li.sfhover ul, #nav li li.sfhover ul, #nav li li li.sfhover ul, #nav li li li li.sfhover ul {
+     background:#444444;
+     left:auto;
+}
+#nav li:hover, #nav li.sfhover {
+     background:#cccccc;
+}
+
+a:link {
+     color: #666699
+}
+a:active {
+     color: #666699
+}
+a:visited {
+     color: #996699
+}
+a:hover {
+     color: #996699
+}
+
+h1 {
+     color: #333333;
+     font-size: 1.4em;
+     line-height: 2em;
+     margin-top: 15px;
+     text-align: left;
+}
+h2 {
+     color: #666666;
+     font-size: 1.1em;
+     line-height: .8em;
+     margin-top: 15px;
+     text-align: left;
+}
+h3 {
+     color: #666666;
+     font-size: 1em;
+     line-height: 1.2em;
+     text-align: left;
+}
+h4 {
+     color: black;
+     font-size: 1.5em;
+     text-align: left;
+}
+h5 {
+     color:black;
+     font-size: 1.1em;
+     line-height: .5em;
+}

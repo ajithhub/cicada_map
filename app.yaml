@@ -28,5 +28,12 @@ handlers:
 
 - url: /js
   static_dir: wwwroot/js
+
+- url: /css
+  static_dir: wwwroot/css
+
+- url: /images
+  static_dir: wwwroot/images
+
 - url: /.*
   static_dir: wwwroot
