@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <title>Record a new sighting...</title>
+
+
+    </head>
+    <body>
+        <form action = "record_sighting" enctype="multipart/form-data" method = "POST">
+            Species: <input name = "species" type = "text" value = "{{sighting.species}}"/><br>
+            Address: <input name = "address" type = "text" value = "{{sighting.address}}"/><br>
+            geohash: <input disabled name = "geohash" type = "text" value = "{{sighting.geohash}}"/><br>
+            Lat: <input disabled name = "lat"  type = "text" value = "{{sighting.coords.lat}}"/><br>
+            long: <input disabled name = "long" type = "text" value = "{{sighting.coords.lon}}" /><br>
+            image: <input type="file" name="img"/><br>
+            comment: <input type="textarea" name="comment"/><br>
+            submit: <input name  = "save" type = "submit"/><br>
+
+        </form>
+
+        <table>
+            {% for sighting_ in all_sightings %}
+            <tr><td><a href='/view_sighting?id={{sighting_.key.id}}'>{{sighting_.address}}</a>
+                    ({{sighting_.coords.lat}}, {{sighting_.coords.lon}}, {{sighting_.geohash}}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+    </body>
+</html>

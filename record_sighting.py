@@ -106,56 +106,21 @@ class RecordSighting(webapp.RequestHandler):
         except ValueError:
             pass
 
+        template_params = {
+                'sighting': None
+                }   
         if id:
-            #key = db.Key.from_path('Sighting', id)
-            #logging.info("Got key %s", key);
-            #logging.info("Got key id %s", key.id());
-            sighting = Sighting.get_by_id(id)
-            logging.info("Got sighting %s", sighting.coords);
-            
-            address = sighting.address
-            if sighting.coords:
-                lat = sighting.coords.lat
-                long = sighting.coords.lon
-            geohash = sighting.geohash
-            logging.info("Got geohash %s", geohash);
-            species = str(sighting.species)
+            template_params['sighting'] = Sighting.get_by_id(id)
 
-        self.response.out.write('''
-        <html>
-            <head>
-            <title>Record a new sighting...</title>
-
-
-            </head>
-            <body onload="initialize()">
-            <form action = "record_sighting" enctype="multipart/form-data" method = "POST">
-            Species: <input name = "species" type = "text" value = "%s"/><br>
-            Address: <input name = "address" type = "text" value = "%s"/><br>
-            geohash: <input disabled name = "geohash" type = "text" value = "%s"/><br>
-            Lat: <input disabled name = "lat"  type = "text" value = "%s"/><br>
-            long: <input disabled name = "long" type = "text" value = "%s" /><br>
-            image: <input type="file" name="img"/><br>
-            comment: <input type="textarea" name="comment"/><br>
-            submit: <input name  = "save" type = "submit"/><br>
-
-            </form>
-         </body>
-        </html>
-        ''' % (species, address, geohash,lat, long))
-
-        self.response.out.write("<table>");
         q = Sighting.all()
-        points = []
+        all_sightings = []
         for result in q:
-            point = {}
-            if result.coords:
-                point['lat'] = result.coords.lat
-                point['lon'] = result.coords.lon
-                point['address'] = result.address
-                points.append(point)
-                self.response.out.write("<tr><td><a href='/view_sighting?id=%s'>%s</a>(%s, %s) %s</td></tr>" % (result.key().id(),result.address, result.coords.lat, result.coords.lon, result.geohash))
-        self.response.out.write("</table>");
+            all_sightings.append(result)
+
+        template_params['all_sightings'] = all_sightings
+
+        path = os.path.join(os.path.dirname(__file__), 'templates/record_sighting_form.html')
+        self.response.out.write(template.render(path, template_params))
 
     def post(self):
         logging.info("Entering POST")
@@ -167,58 +132,57 @@ class RecordSighting(webapp.RequestHandler):
         lat = None
         lon = None
 
-        try:
-            for param in ['address','lat','long']:
-                if self.request.get(param):
-                    logging.info('Got params %s = %s', param, self.request.get(param))
-                    #logging.info('Got params %s = %s' % param, self.request.get(param))
+        for param in ['address','lat','long']:
+            if self.request.get(param):
+                logging.info('Got params %s = %s', param, self.request.get(param))
+                #logging.info('Got params %s = %s' % param, self.request.get(param))
 
-            if self.request.get('address'):
-                sighting.address = self.request.get('address')
-                logging.info("Got addres = '%s'",sighting.address)
-                g = geocoders.Google()
+        if self.request.get('address'):
+            sighting.address = self.request.get('address')
+            logging.info("Got addres = '%s'",sighting.address)
+            g = geocoders.Google()
+            try:
                 place, (lat, lon) = g.geocode(sighting.address)  
-                logging.info("%s: %.5f, %.5f" % (place, lat, lon)  )
+                logging.info("Geocode result: %s: %.5f, %.5f" % (place, lat, lon)  )
+            except ValueError as (geocode_error):
+                logging.info("Geocoding error: %s", geocode_error);
 
-            if self.request.get('img'):
-                image = models.AttachedImage()
-                image.original = self.request.get('img')
-                imageStream = cStringIO.StringIO(image.original)
-                data = EXIF.process_file(imageStream, stop_tag='UNDEF', details=True, strict=False, debug=False)
-                try:
-                    lat, lon = exif_helper.get_gps_coords(data)
-                    logging.info("got img coords %s %s",   lat, lon)
-                except:
-                    logging.info("Image eotagging failed")
+        if self.request.get('img'):
+            image = models.AttachedImage()
+            image.original = self.request.get('img')
+            imageStream = cStringIO.StringIO(image.original)
+            data = EXIF.process_file(imageStream, stop_tag='UNDEF', details=True, strict=False, debug=False)
+            try:
+                lat, lon = exif_helper.get_gps_coords(data)
+                logging.info("got img coords %s %s",   lat, lon)
+            except:
+                logging.info("Image eotagging failed")
 
-            if lat and lon:
-                sighting.geohash = str(Geohash((lat, lon)));
-                sighting.coords = GeoPt(lat, lon);
-                logging.info("geohash is %s", sighting.geohash);
-            else:
-                self.redirect('/record_sighting?=NO LOCATION ERROR')
+        if lat and lon:
+            sighting.geohash = str(Geohash((lat, lon)));
+            sighting.coords = GeoPt(lat, lon);
+            logging.info("geohash is %s", sighting.geohash);
+        else:
+            self.redirect('/record_sighting?=NO LOCATION ERROR')
 
 
-            if not sighting.address:
-                sighting.address = "%s, %s" %(lat, lon)
-                logging.info("Writing address as %s", sighting.address)
+        if not sighting.address:
+            sighting.address = "%s, %s" %(lat, lon)
+            logging.info("Writing address as %s", sighting.address)
 
-            sighting.comment = self.request.get('comment')
-            sighting.spieces = self.request.get('species')
-            logging.info("Sighting is %s", sighting);
-            sighting.put();
+        sighting.comment = self.request.get('comment')
+        sighting.spieces = self.request.get('species')
+        logging.info("Sighting is %s", sighting);
+        sighting.put();
 
-            if image:
-                image.sighting = sighting.key()
-                image.put()
-                logging.info("image Key is %s", image.key().id());
+        if image:
+            image.sighting = sighting.key()
+            image.put()
+            logging.info("image Key is %s", image.key().id());
 
-            logging.info("Key is %s", sighting.key().name());
-            logging.info("Key is %s", sighting.key().id());
+        logging.info("Key is %s", sighting.key().name());
+        logging.info("Key is %s", sighting.key().id());
 
-        except ValueError:
-            # User entered a value that wasn't an integer.  Ignore for now.
-            self.redirect('/record_sighting?=ERROR')
         #except :
         #    logging.info("Generic error");
         #    self.redirect('/record_sighting?=ERRORgeneral')
