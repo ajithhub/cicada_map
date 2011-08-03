@@ -144,7 +144,7 @@ class RecordSighting(webapp.RequestHandler):
             try:
                 place, (lat, lon) = g.geocode(sighting.address)  
                 logging.info("Geocode result: %s: %.5f, %.5f" % (place, lat, lon)  )
-            except ValueError as (geocode_error):
+            except ValueError, geocode_error:
                 logging.info("Geocoding error: %s", geocode_error);
 
         if self.request.get('img'):
