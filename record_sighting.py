@@ -64,6 +64,8 @@ class ShowImage(webapp.RequestHandler):
             self.response.headers['Content-Type'] = "image/jpg"
             if size == "thumb":
                 self.response.out.write(image.get_thumbnail())
+            elif size == "original":
+                self.response.out.write(image.original)
             else:
                 self.response.out.write(image.get_small())
         
@@ -161,6 +163,9 @@ class RecordSighting(webapp.RequestHandler):
         sighting = models.Sighting()
         logging.info("Entering POST")
 
+        image = None
+        lat = None
+        lon = None
 
         try:
             for param in ['address','lat','long']:
@@ -175,9 +180,6 @@ class RecordSighting(webapp.RequestHandler):
                 place, (lat, lon) = g.geocode(sighting.address)  
                 logging.info("%s: %.5f, %.5f" % (place, lat, lon)  )
 
-            image = None
-            lat = None
-            lon = None
             if self.request.get('img'):
                 image = models.AttachedImage()
                 image.original = self.request.get('img')
