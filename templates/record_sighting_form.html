@@ -3,29 +3,70 @@
         <title>Record a new sighting...</title>
         <link rel="shortcut icon" href="/favicon.ico"/> 
         <link rel="stylesheet" href="/css/style.css" type="text/css"/> 
-
+        <link rel="stylesheet" href="/css/form.css" type="text/css"/> 
 
     </head>
     <body>
-        <form action = "record_sighting" enctype="multipart/form-data" method = "POST">
-            Species: <input name = "species" type = "text" value = "{{sighting.species}}"/><br>
-            Address: <input name = "address" type = "text" value = "{{sighting.address}}"/><br>
-            geohash: <input disabled name = "geohash" type = "text" value = "{{sighting.geohash}}"/><br>
-            Lat: <input disabled name = "lat"  type = "text" value = "{{sighting.coords.lat}}"/><br>
-            long: <input disabled name = "long" type = "text" value = "{{sighting.coords.lon}}" /><br>
-            image: <input type="file" name="img"/><br>
-            comment: <input type="textarea" name="comment"/><br>
-            submit: <input name  = "save" type = "submit"/><br>
+        <h4>Record a new Sighting </h4>
+        <form id = "cmxform" class="cmxform" action = "record_sighting" enctype="multipart/form-data" method = "POST">
+            <fieldset>
+                <legend>What kind of cicada is it? </legend>
+                <ol>
+                    <li>
+                    <label for ="species">Species</label>
+                        <input name = "species" type = "text" value = "{{sighting.species}}"/>
+                    </li>
+
+            </fieldset>
+            <fieldset>
+
+                <legend>Where did you see it? </legend>
+                    <li>
+                    <label for="address">Address</label>
+                    <input type="radio" name="location" value="address">
+                    <input name = "address" type = "text" value = "{{sighting.address}}"/>
+                    </li>
+                    <li>
+                    <label for = "geohash" >geohash</label>
+                    <input type="radio" name="location" value="geohash">
+                    <input disabled name = "geohash" type = "text" value = "{{sighting.geohash}}"/>
+                    </li>
+
+                    <li>
+                    <label for ="lat">Coordinates</label> 
+                    <input type="radio" name="location" value="coords">
+                    <input disabled size="10" name = "lat"  type = "text" value = "{{sighting.coords.lat}}"/>
+                    <input disabled size="10" name = "lon"  type = "text" value = "{{sighting.coords.lon}}"/>
+                    </li>
+            </fieldset>
+
+            <fieldset>
+                <legend>Did you get a picture? </legend>
+                    <li>
+                    <label for="img" >image</label> 
+                    <input type="file" name="img"/>
+                    </li>
+            </fieldset>
+
+            <fieldset>
+
+                <legend>Anything we should know? </legend>
+                    <li>
+                    <label for = "comment" >comment</label>
+                     <textarea name="comment" rows="7" cols="25"></textarea>
+                    </li>
+
+                    <p><input name  = "save" type = "submit"/>
+            </fieldset>
 
         </form>
-        <hr>
 
         <h4> All sightings </h4>
 
         <table>
             {% for sighting_ in all_sightings %}
             <tr><td><a href='/view_sighting?id={{sighting_.key.id}}'>{{sighting_.address}}</a>
-                    ({{sighting_.coords.lat}}, {{sighting_.coords.lon}}, {{sighting_.geohash}}
+                    ({{sighting_.coords.lat}}, {{sighting_.coords.lon}}, {{sighting_.geohash}})
                 </td>
             </tr>
             {% endfor %}
